@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LECP Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600&family=Tinos&display=swap">
+<link rel="stylesheet" href="lecp.css">
+<style>
+  [data-section] { margin-bottom: var(--lecp-space-7); }
+  h1[tabindex="-1"]:focus { outline: none; }
+  .lecp-shell-content main { padding-top: var(--lecp-space-7); padding-bottom: var(--lecp-space-8); }
+  .demo-row { display: flex; flex-wrap: wrap; gap: var(--lecp-space-3); align-items: center; }
+  .brand { display: block; padding: 0 var(--lecp-space-2); font-size: var(--lecp-type-section); font-weight: 300; }
+  @media (max-width: 719px) { .lecp-shell-content main { padding-bottom: 96px; } }
+</style>
+</head>
+<body>
+<a class="lecp-skip-link" href="#view">Skip to content</a>
+<div class="lecp-shell">
+  <aside class="lecp-rail">
+    <a class="brand" href="#/">LECP</a>
+    <nav class="lecp-nav" id="nav" aria-label="Sections"></nav>
+    <p class="lecp-caption" style="margin-top:auto;padding:0 var(--lecp-space-2)">Design system</p>
+  </aside>
+  <div class="lecp-shell-content">
+    <main class="lecp-container"><div id="view"></div></main>
+  </div>
+</div>
+<script src="lecp.js"></script>
+<script>
+(function () {
+  var SECTIONS = [
+    { id: 'principles', title: 'Principles', blurb: 'One interface logic for every input and every screen: focus, motion, size, reflow.', kids: [
+      ['overview', 'Overview', 'What LECP is and what its rules cover.'],
+      ['input-independence', 'Input independence', 'One logic for mouse, keyboard, touch, controller and remote.'],
+      ['tiles', 'Tiles', 'The primary unit: focusable, selectable, sized by importance.'],
+      ['directional-navigation', 'Directional navigation', 'Focus moves where the layout implies.'],
+      ['dismissal', 'Dismissal', 'Fade and slide toward the nearest edge.'],
+      ['notifications', 'Notifications', 'Non-interactive tiles that inform, then leave.'],
+      ['feedback', 'Typography, color, feedback', 'Legible, restrained, and never silent on input.'],
+      ['modules', 'Modules and reflow', 'Arrange existing modules; reflow, never rebuild.']] },
+    { id: 'foundations', title: 'Foundations', blurb: 'The roles and rules behind color, type, space and motion.', kids: [
+      ['color', 'Color', 'Surfaces, accents, contrast, theming.'], ['typography', 'Typography', 'Type scale and measure.'],
+      ['spacing', 'Spacing and sizing', 'Space tokens and touch targets.'], ['layout', 'Layout and grid', '12 columns, breakpoints, shell and rail.'],
+      ['motion', 'Motion', 'Durations, easings, page transitions.'], ['elevation', 'Elevation and borders', 'Depth without decoration.'],
+      ['states', 'Focus and states', 'Focus, hover, active, disabled, loading, error.'], ['accessibility', 'Accessibility', 'Skip link, sr-only, ARIA.']] },
+    { id: 'components', title: 'Components', blurb: 'Reusable modules and the patterns built from them.', kids: [
+      ['tile', 'Tile', 'The core interactive unit.'], ['navigation', 'Navigation', 'The rail, and how it collapses on compact screens.'],
+      ['button', 'Button', 'Primary, ghost, danger, sizes.'], ['forms', 'Form fields', 'Labeled fields with errors that explain themselves.'],
+      ['badge', 'Badge', 'Status at a glance.'], ['notification', 'Notification', 'A tile that only informs.'],
+      ['importance-layouts', 'Importance-weighted layouts', 'Pattern: sizing a tile grid.'], ['forms-validation', 'Forms and validation', 'Pattern: errors that explain themselves.'],
+      ['notification-lifecycle', 'Notification lifecycle', 'Pattern: enter, stay, dismiss.'], ['empty-states', 'Empty, loading, error', 'Pattern: states that are never blank.']] },
+  ];
+
+  var P = {
+    "overview": { rule: "One interface logic that means the same thing on mouse, keyboard, touch, controller and remote. Layouts are never redesigned per input method; they reflow.",
+      practice: ["Every interactive element is focusable and can be reached directionally.", "Nothing assumes a cursor, a hover state, or a right-click.", "The same modules work on every platform. A new screen is an arrangement of existing modules, not a new set of rules.", "Every implementation applies these principles to its own screen and input. None of them changes the principles."],
+      links: [["principles/tiles", "Tiles", "Principle"], ["principles/input-independence", "Input independence", "Principle"]] },
+    "input-independence": { rule: "Design for intent, not device. Select, move focus and go back mean the same thing whichever input produced them.",
+      practice: ["Nothing depends on hover, neither to reveal an option nor to make it work.", "No action is reachable only through right-click or long-press.", "Focus is always visible, and from any focused element there is somewhere to go next.", "Pointer and touch can select directly, but they never bypass the focus model."],
+      links: [["foundations/states", "Focus and states", "Foundation"], ["foundations/accessibility", "Accessibility", "Foundation"]] },
+    "tiles": { rule: "A tile is a rectangular, uniformly spaced, focusable, selectable unit representing a single option.",
+      practice: ["Every tile has a clear label and an optional image region.", "Two states: focus (a highlight, shadow or scale change) and active (a brief animation or color pulse on selection).", "Size follows importance. The most likely or most significant choice gets the largest rectangle; less relevant options get proportionally smaller ones.", "The grid adapts to available space and orientation. The logic never changes between a small display and a large one, only the reflow.", "The left or right side of a tile is never exactly spanned by two or more stacked neighbors. A tall tile with two tiles stacked beside it that together match its height breaks the rule. A wide tile with several tiles beneath it does not, because moving down always lands on the leftmost of them."],
+      links: [["components/tile", "Tile", "Component"], ["components/importance-layouts", "Importance-weighted layouts", "Pattern"], ["foundations/layout", "Layout and grid", "Foundation"]] },
+    "directional-navigation": { rule: "Focus moves in the direction the layout implies, with no exceptions that would surprise a first-time user.",
+      practice: ["Up, down, left and right go to the spatial neighbor in that direction.", "The same rule applies to every tile grid, whatever its size.", "When a layout reflows, directions follow the new layout.", "If a move would surprise someone seeing the interface for the first time, the layout is wrong, not the rule.", "Left and right are strict: the left or right side of a tile is never exactly spanned by two or more stacked neighbors, because pressing that direction would have no clear answer.", "Up and down settle ties by position: when several tiles lie above or below, focus lands on the leftmost one."],
+      links: [["components/navigation", "Navigation", "Component"], ["foundations/states", "Focus and states", "Foundation"]] },
+    "dismissal": { rule: "A tile that has finished its purpose does not simply disappear. It fades out and slides toward the nearest edge at the same time.",
+      practice: ["It applies uniformly: a resolved choice, a completed prompt and an expired notification all leave the same way.", "The nearest edge is the nearest screen edge, or the nearest natural anchor edge.", "Timing is fast enough not to block the next input, slow enough to read as deliberate rather than abrupt.", "The page transitions on this site are the same rule applied to whole sections."],
+      links: [["foundations/motion", "Motion", "Foundation"], ["components/notification-lifecycle", "Notification lifecycle", "Pattern"]] },
+    "notifications": { rule: "A notification tile looks like a tile but cannot be focused or selected. It slides in from an edge, stays as long as it needs to be read, then dismisses with the standard fade and slide-out.",
+      practice: ["It uses the same spacing, contrast and typography language as tiles, so it reads as part of the system.", "It exists purely to inform.", "It is never the only channel for something the person must act on immediately. Pair high-stakes information with a second cue, because a transient element is easy to miss."],
+      links: [["components/notification", "Notification", "Component"], ["components/notification-lifecycle", "Notification lifecycle", "Pattern"]] },
+    "feedback": { rule: "Every focus transition and every activation is visibly and consistently acknowledged. Silence on input is the fastest way to make an interface feel broken, however good it looks.",
+      practice: ["Text is legible at a normal viewing distance on every target display.", "Weight and contrast distinguish the focus state, not color alone. This is for accessibility, and because color response varies wildly across cheap displays.", "The palette stays restrained.", "Background-to-tile contrast holds up in both light and dark presentation contexts."],
+      links: [["foundations/color", "Color", "Foundation"], ["foundations/typography", "Typography", "Foundation"], ["foundations/states", "Focus and states", "Foundation"]] },
+    "modules": { rule: "LECP is a logical structure, not a specific implementation. Think in reusable modules; a new screen is an arrangement of existing ones.",
+      practice: ["The same rules should produce a recognizably consistent interface in whatever a project is built with.", "Build from modules (tile, notification, container) rather than one-off screens.", "A layout never needs redesigning for a new resolution or input method. It reflows; it does not get rebuilt."],
+      links: [["components/tile", "Tile", "Component"], ["foundations/layout", "Layout and grid", "Foundation"]] }
+  };
+
+  var M = {
+    "input-independence": "Translate every raw input (a click, a key, a stick, a swipe) into a small set of intents such as move, select and back. Components respond only to intents, so supporting a new input means writing one translator.",
+    "tiles": "Give each option an importance rank. A layout step turns ranks into sizes for the space available. Authors never place tiles by hand per resolution. The same step enforces the side-neighbor rule by construction, resizing or reordering so that no tile's left or right side is exactly spanned by two or more stacked neighbors.",
+    "directional-navigation": "Build the focus graph from the layout itself: the neighbor in a direction is the nearest element whose position lies that way. Rebuild the graph whenever the layout reflows. For left and right, layouts never exactly split a side between stacked neighbors, so the graph never faces that tie. For up and down, take the leftmost candidate.",
+    "dismissal": "Find the nearest edge from the element's position, play the fade and the slide together toward it, and remove the element only when both finish.",
+    "notifications": "Queue notifications, show each for as long as its text needs to be read, then hand it to the standard dismissal routine. Nothing in a notification takes focus.",
+    "feedback": "Route every focus change and every activation through one acknowledgement path, so no input can slip through without a visible response.",
+    "modules": "Define each module once. A screen is a list of modules plus data, and the layout step does the reflowing."
+  };
+
+  function principlePage(s, k) {
+    var p = P[k[0]];
+    return header('Principles', k[1], p.rule) +
+      '<section data-section><h2 class="lecp-section-title lecp-mb-4">In practice</h2>' +
+      p.practice.map(function (t) { return '<p class="lecp-body lecp-mb-3">' + t + '</p>'; }).join('') + '</section>' +
+      (M[k[0]] ? '<section data-section><h2 class="lecp-section-title lecp-mb-4">Method</h2><p class="lecp-body">' + M[k[0]] + '</p></section>' : '') +
+      '<section data-section><h2 class="lecp-section-title lecp-mb-4">Related</h2><div class="lecp-grid">' +
+      p.links.map(function (l) { return '<a class="lecp-tile lecp-tile--s lecp-col-4" href="#/' + l[0] + '"><span class="lecp-meta">' + l[2] + '</span><span class="lecp-tile-label">' + l[1] + '</span><span class="lecp-tile-arrow" aria-hidden="true">→</span></a>'; }).join('') +
+      '</div></section>' + pager(s, k);
+  }
+
+  var ROLE = ["Role", "Job"];
+  var F = {
+    "color": { lead: "Color works in roles. A handful of roles covers every screen, and no role is ever the only carrier of meaning.",
+      blocks: [
+        { h: "Roles", head: ROLE, rows: [["Background", "The page itself. Everything else sits on it."], ["Surface", "Tiles and fields, one step lighter than the background."], ["Raised surface", "Things that float above the page, such as notifications."], ["Line", "Dividers and quiet borders."], ["Text", "Primary text, plus a secondary tone for supporting text."], ["Accent", "One color for focus, selection and the primary action."], ["Status", "Success, warning and error. Reserved for state, never for decoration."]] },
+        { h: "Example values (illustrative)", head: ["Role", "Example"], sw: "color", rows: [["Background", "#000000"], ["Surface", "#1a1a1a"], ["Raised surface", "#262626"], ["Accent", "#0078d4"], ["Success", "#4caf50"], ["Warning", "#ffb900"], ["Error", "#e8453c"]] }],
+      notes: ["One accent. A second accent competes with focus.", "Color is never the only signal. Pair it with weight, an icon or text, because color response varies wildly across cheap displays.", "Contrast between background and tiles must hold in both light and dark presentation contexts."] },
+    "typography": { lead: "A small scale with few weights. Hierarchy comes from size and weight, and text stays legible at a normal viewing distance on every target display.",
+      blocks: [
+        { h: "Roles", head: ROLE, rows: [["Display", "A single hero statement."], ["Title", "The name of a screen."], ["Section", "Headings inside a screen."], ["Item label", "The label on a tile or option."], ["Body", "Supporting text, in the secondary tone."], ["Meta", "Short lowercase labels above content, in the secondary font."], ["Caption", "Hints and timestamps, in the secondary font."]] },
+        { h: "Example sizes (illustrative)", head: ["Role", "Example"], rows: [["Display", "64px"], ["Title", "40px"], ["Section", "24px"], ["Item label", "20px"], ["Body", "16px"], ["Meta", "14px"], ["Caption", "13px"]] },
+        { h: "Two voices", head: ["Voice", "Used for", "Example"], rows: [["Primary", "Titles, labels and body text. The human voice.", "Hanken Grotesk"], ["Secondary (serif)", "Meta labels, captions, index numbers and table headings. Always small, always lowercase. The annotation voice.", "Tinos"]] }],
+      notes: ["The secondary font is always small and always lowercase: labels, captions, index numbers and table headings. Never use it for titles, body text or long reading, and never set it in capitals.", "Weight and contrast, not color alone, tell the person which element has focus.", "Keep body text to a comfortable line length, around 60 characters."] },
+    "spacing": { lead: "Uniform spacing is what makes separate tiles read as one set. Steps come from a small scale on a single base unit.",
+      blocks: [
+        { h: "Rules", head: ROLE, rows: [["Base unit", "Every gap and padding is a multiple of one small unit."], ["Tile gap", "Identical between every pair of neighboring tiles."], ["Targets", "Sized for the least precise input in use, so touch sets the floor."], ["Margins", "Tighter on compact screens, never removed."]] },
+        { h: "Example values (illustrative)", head: ["Role", "Example"], rows: [["Base unit", "4px"], ["Largest step", "64px"], ["Tile gap", "12px"], ["Minimum target", "44px"]] }] },
+    "layout": { lead: "Layouts reflow. They are never redesigned for a new resolution or a new input method.",
+      blocks: [
+        { h: "Rules", head: ROLE, rows: [["Columns", "Tiles sit on a column grid that adapts to available space and orientation."], ["Size is importance", "The most likely or most significant choice takes the widest span; less relevant options take proportionally smaller ones."], ["Breakpoints", "A few size classes (compact, standard, wide), not device names."], ["Reflow", "Below a size class, spans stack. Above it, they open up. The logic stays the same."]] },
+        { h: "Example values (illustrative)", head: ["Role", "Example"], rows: [["Columns", "12"], ["Gap", "12px"], ["Standard starts at", "720px"], ["Wide starts at", "1200px"]] }] },
+    "motion": { lead: "Motion explains a change of state. Nothing animates without communicating one, and nothing loops in the background.",
+      blocks: [
+        { h: "Roles", head: ROLE, rows: [["Focus", "Fast. Shows where input is now."], ["Activate", "The briefest. Shows the input landed."], ["Enter", "Arrivals slide in from an edge and decelerate into place."], ["Dismiss", "Fade out and slide toward the nearest edge, together."], ["Page change", "Each section of the old page dismisses toward its own nearest edge, then the new page's sections arrive from theirs."]] },
+        { h: "Example values (illustrative)", head: ["Role", "Example"], rows: [["Focus", "120ms"], ["Activate", "100ms"], ["Dismiss", "200ms"], ["Enter", "240ms"], ["Page-change stagger", "35ms per section"], ["Slide distance", "20px"]] }],
+      notes: ["Fast enough not to block the next input, slow enough to read as deliberate rather than abrupt.", "Honor the reduced-motion preference by swapping instantly."] },
+    "elevation": { lead: "Depth comes from surface lightness and borders first. Shadows are only for things that float above the page.",
+      blocks: [
+        { h: "Rules", head: ROLE, rows: [["Surface steps", "A lighter surface reads as nearer. Prefer this to shadow."], ["Borders", "Interactive elements always have a border, transparent at rest, so focus never shifts the layout."], ["Shadow", "Reserved for floating elements such as notifications."]] },
+        { h: "Example value (illustrative)", head: ["Role", "Example"], rows: [["Floating shadow", "0 8px 24px rgba(0, 0, 0, 0.5)"]] }] },
+    "states": { lead: "Every interactive element defines every state, and every state has a visible treatment. Silence on input makes an interface feel broken.",
+      blocks: [
+        { h: "States", head: ["State", "What it tells the person", "Rule"], rows: [["Focus", "Where input is now", "Highlight, shadow or scale change. Never color alone."], ["Active", "The input landed", "A brief animation or color pulse on selection."], ["Selected", "This is the current choice", "A persistent, visible mark."], ["Disabled", "Not available", "Visibly quieter and not focusable."], ["Loading", "Working on it", "Shows progress, never a frozen element."], ["Error", "Something needs fixing", "Color plus an icon and text."]] }],
+      notes: ["Every focus transition and every activation is visibly and consistently acknowledged."] },
+    "accessibility": { lead: "Accessibility follows from input independence. The same rules that serve a controller serve assistive technology.",
+      blocks: [
+        { h: "Rules", head: ROLE, rows: [["Visible focus", "Always shown, on every interactive element."], ["No hover dependence", "Nothing is revealed or enabled only by hovering."], ["Color is never alone", "Pair it with weight, icon or text."], ["Reduced motion", "Honored everywhere, by swapping instantly."], ["Targets", "Large enough for touch."], ["Notifications", "Announced without stealing focus."], ["Bypass", "Long pages offer a way to skip repeated navigation."]] }] }
+  };
+
+  function foundationPage(s, k) {
+    var f = F[k[0]];
+    return header('Foundations', k[1], f.lead) + f.blocks.map(function (b) {
+      return '<section data-section><h2 class="lecp-section-title lecp-mb-4">' + b.h + '</h2><table class="lecp-table"><tr>' +
+        b.head.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>' +
+        b.rows.map(function (r) {
+          return '<tr>' + r.map(function (c, i) {
+            var cell = (i === 0 && b.code) ? '<code class="lecp-code">' + c + '</code>' : c;
+            if (i === 0 && b.sw === 'color') cell = '<span style="display:inline-block;width:16px;height:16px;margin-right:10px;vertical-align:middle;border:1px solid var(--lecp-line);background:' + r[1] + '"></span>' + cell;
+            if (i === 0 && b.sw === 'bar') cell = '<span style="display:inline-block;height:8px;width:' + r[1] + ';margin-right:12px;background:var(--lecp-accent)"></span>' + cell;
+            return '<td>' + cell + '</td>';
+          }).join('') + '</tr>';
+        }).join('') + '</table></section>';
+    }).join('') +
+      (f.notes ? '<section data-section><h2 class="lecp-section-title lecp-mb-4">Guidance</h2>' + f.notes.map(function (t) { return '<p class="lecp-body lecp-mb-3">' + t + '</p>'; }).join('') + '</section>' : '') +
+      pager(s, k);
+  }
+
+  var esc = function (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+  var host = document.getElementById('view');
+  var nav = document.getElementById('nav');
+
+  nav.innerHTML = SECTIONS.map(function (s, i) {
+    return '<a class="lecp-nav-item" data-id="' + s.id + '" href="#/' + s.id + '"><span class="lecp-nav-item-index">0' + (i + 1) +
+      '</span><span class="lecp-nav-item-label">' + s.title + '</span></a>';
+  }).join('');
+
+  function header(eyebrow, title, lead) {
+    return '<header data-section><p class="lecp-eyebrow"><a href="#/">LECP</a>' + (eyebrow ? ' / ' + eyebrow : '') + '</p>' +
+      '<h1 class="lecp-title lecp-mt-3" tabindex="-1">' + title + '</h1>' + (lead ? '<p class="lecp-body lecp-mt-3">' + lead + '</p>' : '') + '</header>';
+  }
+
+  function home() {
+    var big = SECTIONS[0], rest = SECTIONS.slice(1);
+    return header('', 'Design', 'A design system for interfaces that behave the same on every input and every screen. Start with the principles.') +
+      '<section data-section><div class="lecp-grid"><a class="lecp-tile lecp-tile--l lecp-col-8 lecp-tile--primary" href="#/' + big.id + '"><span class="lecp-meta">Start here</span><h2 class="lecp-section-title">' + big.title + '</h2><p class="lecp-body">' + big.blurb + '</p><span class="lecp-tile-arrow" aria-hidden="true">→</span></a>' +
+      rest.map(function (s) { return '<a class="lecp-tile lecp-col-4" href="#/' + s.id + '"><h2 class="lecp-tile-label">' + s.title + '</h2><p class="lecp-body">' + s.blurb + '</p><span class="lecp-tile-arrow" aria-hidden="true">→</span></a>'; }).join('') +
+      '</div></section>';
+  }
+
+  function section(s) {
+    return header(s.title, s.title, s.blurb) + '<section data-section><div class="lecp-grid">' + s.kids.map(function (k, i) {
+      return '<a class="lecp-tile ' + (i === 0 ? 'lecp-col-8' : 'lecp-col-4') + '" href="#/' + s.id + '/' + k[0] + '"><h2 class="lecp-tile-label">' + k[1] + '</h2><p class="lecp-body">' + k[2] + '</p><span class="lecp-tile-arrow" aria-hidden="true">→</span></a>';
+    }).join('') + '</div></section>';
+  }
+
+  function stub(s, k) {
+    return header(s.title, k[1], k[2]) + '<section data-section><span class="lecp-badge lecp-badge--warning">⚠ Not written yet</span></section>' + pager(s, k);
+  }
+
+  function pager(s, k) {
+    var i = s.kids.indexOf(k), p = s.kids[i - 1], n = s.kids[i + 1];
+    function t(x, label) { return x ? '<a class="lecp-tile lecp-tile--s lecp-col-6" href="#/' + s.id + '/' + x[0] + '"><span class="lecp-meta">' + label + '</span><span class="lecp-tile-label">' + x[1] + '</span></a>' : ''; }
+    return '<nav data-section class="lecp-grid" aria-label="Pages">' + t(p, 'Previous') + (p ? '' : '') + t(n, 'Next') + '</nav>';
+  }
+
+  var C = {
+    "tile": { lead: "A single option, shown as a rectangle that can be focused and selected. It is the primary unit of every LECP screen.",
+      anatomy: [["Container", "A rectangle with uniform spacing from its neighbors."], ["Label", "Always present. Names the option."], ["Image region", "Optional."]],
+      states: [["Focus", "Highlight, shadow or scale change."], ["Active", "A brief animation or color pulse on selection."], ["Dismissed", "Fades out and slides toward the nearest edge."]],
+      behavior: ["Size reflects importance: the most likely or most significant option gets the largest rectangle.", "Tiles reflow with available space and orientation. Only the arrangement changes, never the logic.", "One tile represents one option.", "A left or right side is never exactly spanned by two or more stacked neighbors. Otherwise focus could not choose between them."],
+      method: "Rank options by importance, then let a layout step convert ranks into spans for the current space. Focus order follows from the resulting layout, and the layout step guarantees that no left or right side is exactly spanned by two or more stacked neighbors.",
+      impl: [["LECP CSS", '<a class="lecp-tile lecp-col-8 lecp-tile--primary" href="#">\n  <span class="lecp-meta">Action</span>\n  <h3 class="lecp-tile-label">Get started</h3>\n</a>', 1]] },
+    "notification": { lead: "A tile that only informs. It looks like the rest of the system and cannot be focused or selected.",
+      anatomy: [["Container", "Same spacing, contrast and typography language as a tile."], ["Message", "Short text that can be read in one pass."]],
+      states: [["Entering", "Slides in from an edge."], ["Visible", "Stays as long as needed to be read."], ["Dismissing", "Fades out and slides toward the nearest edge."]],
+      behavior: ["It is never the only channel for something that needs immediate action. Pair high-stakes information with a second cue.", "It never takes focus."],
+      method: "Queue notifications, show each for as long as its text needs to be read, then pass it to the standard dismissal routine.",
+      impl: [["LECP CSS", '<div class="lecp-toast-region">\n  <div class="lecp-toast" role="status">Changes saved.</div>\n</div>', 1]] },
+    "navigation": { lead: "A persistent rail of section items beside the content, always one input away.",
+      anatomy: [["Rail", "A column pinned beside the content."], ["Item", "A short index and a label for one section."], ["Current item", "Marked as the section on screen."], ["Content", "The area that changes when an item is chosen."]],
+      states: [["Rest", "An item that is not current."], ["Focus", "The item input is on."], ["Current", "The section being shown."]],
+      behavior: ["Up and down move focus between items, following directional navigation.", "The current item is marked by more than color.", "The rail stays put while the content changes, so it anchors the eye during a page transition.", "On compact screens the rail collapses into a bottom bar that keeps one short mark per item in place of full labels."],
+      method: "Build the item list from the app's sections and derive the current item from the route. Keep the rail outside the page transition so only the content moves.",
+      impl: [["LECP CSS", '<aside class="lecp-rail">\n  <nav class="lecp-nav" aria-label="Sections">\n    <a class="lecp-nav-item is-active" href="#one">\n      <span class="lecp-nav-item-index">01</span>\n      <span class="lecp-nav-item-label">Section</span>\n    </a>\n  </nav>\n</aside>', 1]] },
+    "button": { lead: "A control that commits an action. Use a tile to choose among options and a button to act on the choice.",
+      anatomy: [["Container", "A target large enough for touch."], ["Label", "A verb that says what will happen."]],
+      states: [["Focus", "Visible, and never by color alone."], ["Active", "A brief acknowledgement on activation."], ["Disabled", "Visibly quieter and not focusable."], ["Loading", "Shows progress in place of the label."]],
+      sh: "States and variants",
+      behavior: ["Variants set emphasis: primary for the one main action in a view, default for the rest, ghost for low emphasis, danger for destructive actions.", "A view has one primary button at most.", "Danger is never signaled by color alone. The label must say what will be destroyed.", "While loading, a button does not accept a second activation."],
+      method: "Send button activation through the same intent path as tile selection, so keyboard, pointer and touch behave identically. Set loading and disabled as explicit states rather than inferring them.",
+      impl: [["LECP CSS", '<button class="lecp-btn lecp-btn--primary">Save changes</button>\n<button class="lecp-btn lecp-btn--danger">Delete account</button>', 1]] },
+    "forms": { lead: "Fields for entering information. A field is always labeled, and its errors say how to fix them.",
+      anatomy: [["Label", "Always visible. A placeholder is never a substitute."], ["Control", "An input, select or text area."], ["Hint", "Optional guidance shown beneath the control."], ["Error message", "Replaces the hint when the value needs fixing."]],
+      states: [["Rest", "Empty or filled, not focused."], ["Focus", "Visible highlight on the control."], ["Error", "Color plus an icon and text."]],
+      behavior: ["Error text says what is wrong and how to fix it.", "Error is never color alone.", "The error is tied to its field so assistive technology reads them together.", "Every field acknowledges focus the same way a tile does."],
+      method: "Keep the label, hint and error as one unit per field. Show an error once a value has been committed, and clear it as soon as the value is fixed.",
+      impl: [["LECP CSS", '<div class="lecp-field lecp-field--error">\n  <label class="lecp-label" for="email">Email</label>\n  <input class="lecp-input" id="email" aria-invalid="true" aria-describedby="email-error">\n  <p class="lecp-field-error-text" id="email-error">⚠ Enter a valid email address.</p>\n</div>', 1]] },
+    "badge": { lead: "A small, non-interactive status mark. It tells the person the state of something at a glance.",
+      anatomy: [["Container", "A fixed minimum size, so a row of badges lines up."], ["Icon", "Carries the status alongside color."], ["Label", "Names the status in a word."]],
+      sh: "Variants", shd: ["Variant", "Meaning"],
+      states: [["Neutral", "Information with no judgment."], ["Success", "Done or healthy."], ["Warning", "Needs attention soon."], ["Error", "Failed or blocked."]],
+      behavior: ["A badge cannot be focused or selected.", "Status is never color alone. Every variant pairs its color with an icon and a word."],
+      method: "Map each status in the data to one variant and one icon in a single place, so the same status looks the same everywhere.",
+      impl: [["LECP CSS", '<span class="lecp-badge lecp-badge--success">✓ Active</span>\n<span class="lecp-badge lecp-badge--error">✕ Failed</span>', 1]] },
+    "importance-layouts": { lead: "How a ranked list of options becomes a tile grid on any screen.",
+      ah: "Modules", anatomy: [["Tile", "One per option."], ["Grid", "The container that arranges the tiles."]],
+      sh: "Sequence", shd: ["Step", "What happens"],
+      states: [["1. Rank", "Order the options by importance."], ["2. Size", "Convert ranks into spans for the available space."], ["3. Place", "Lay tiles out in reading order, packing each row."], ["4. Resolve", "If two or more stacked tiles would exactly span the left or right side of another tile, resize or reorder until none do."], ["5. Reflow", "Recompute sizes when space or orientation changes."]],
+      behavior: ["The most likely or most significant option gets the largest rectangle.", "Size ranks options. It is never used for visual variety.", "The same ranks produce a sensible layout on every screen.", "No tile ever has two or more stacked neighbors that exactly span its left or right side. Tiles above or below a tile are free to cover its width, and vertical moves go to the leftmost."],
+      method: "Keep ranks in the data and spans out of it. A layout step owns the mapping, so a new resolution needs no new design. The same step enforces the side-neighbor rule by construction, so no author has to catch it.",
+      impl: [["LECP CSS", '<div class="lecp-grid">\n  <a class="lecp-tile lecp-col-8" href="#">Most likely</a>\n  <a class="lecp-tile lecp-col-4" href="#">Next</a>\n</div>', 1]] },
+    "forms-validation": { lead: "How a form turns a mistake into a fix without losing the person's place.",
+      ah: "Modules", anatomy: [["Field", "Holds the value and its error."], ["Button", "Commits the form."]],
+      sh: "Sequence", shd: ["Step", "What happens"],
+      states: [["1. Entry", "The person fills fields at their own pace."], ["2. Commit", "They activate the primary button."], ["3. Validate", "Every field is checked together."], ["4. Show errors", "Each failing field shows its error and how to fix it."], ["5. Fix", "An error clears as soon as its value is valid."]],
+      behavior: ["Focus moves to the first field that needs fixing.", "Entered values are kept.", "Errors explain themselves with icon and text, not color alone."],
+      method: "Validate all fields on commit, collect the errors, then render them once and move focus to the first. Re-check a field when it changes after an error.",
+      impl: [["LECP CSS", "Use .lecp-field--error with a .lecp-field-error-text, as in the Form fields component."]] },
+    "notification-lifecycle": { lead: "The life of a notification, from the change that triggers it to its dismissal.",
+      ah: "Modules", anatomy: [["Notification", "The only module involved."]],
+      sh: "Sequence", shd: ["Step", "What happens"],
+      states: [["1. Trigger", "Something changes that the person needs to know about."], ["2. Enter", "A notification slides in from an edge."], ["3. Stay", "It remains as long as needed to be read."], ["4. Dismiss", "It fades out and slides toward the nearest edge."]],
+      behavior: ["Notifications inform. They are never the only cue for something that needs immediate action.", "They never take focus.", "Every notification leaves the same way."],
+      method: "Queue triggers, give each notification its own display time, and hand it to the standard dismissal routine when that time ends.",
+      impl: [["LECP CSS", 'Add the leaving class when its time is up, then remove the element when the animation ends:\ntoast.classList.add("lecp-toast--leaving");', 1]] },
+    "empty-states": { lead: "A screen is never blank. Loading, empty and error each say what is happening and what to do.",
+      ah: "Modules", anatomy: [["Tile", "Shows the state in the space the content will take."], ["Button", "Offers the next action."], ["Notification", "Reports a failure that happens in the background."]],
+      sh: "States", shd: ["State", "What it shows"],
+      states: [["Loading", "Progress in the space the content will fill."], ["Empty", "What is missing and one action to fix it."], ["Error", "What failed and how to retry."]],
+      behavior: ["The layout holds its size between states, so nothing jumps when content arrives.", "Error is never color alone.", "Each state offers one obvious next step."],
+      method: "Render every state from the same layout and swap what is inside the tile, so the arrangement stays fixed.",
+      impl: [["LECP CSS", '<div class="lecp-tile lecp-tile--loading">…</div>\n<div class="lecp-tile lecp-tile--error">…</div>', 1]] }
+  };
+
+  function componentPage(s, k) {
+    var c = C[k[0]];
+    function tbl(head, rows) {
+      return '<table class="lecp-table"><tr>' + head.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>' +
+        rows.map(function (r) { return '<tr>' + r.map(function (x) { return '<td>' + x + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+    }
+    function sec(h, body) { return '<section data-section><h2 class="lecp-section-title lecp-mb-4">' + h + '</h2>' + body + '</section>'; }
+    return header('Components', k[1], c.lead) +
+      sec(c.ah || 'Anatomy', tbl(c.ah ? ['Module', 'Role'] : ['Part', 'Role'], c.anatomy)) +
+      sec(c.sh || 'States', tbl(c.shd || ['State', 'Meaning'], c.states)) +
+      sec('Behavior', c.behavior.map(function (t) { return '<p class="lecp-body lecp-mb-3">' + t + '</p>'; }).join('')) +
+      sec('Method', '<p class="lecp-body">' + c.method + '</p>') +
+      sec('Implementations', c.impl.map(function (i) {
+        return '<p class="lecp-meta lecp-mb-2">' + i[0] + '</p>' + (i[2] ? '<pre class="lecp-pre lecp-mb-4">' + esc(i[1]) + '</pre>' : '<p class="lecp-body lecp-mb-4">' + i[1] + '</p>');
+      }).join('')) + pager(s, k);
+  }
+
+  function route() {
+    var parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
+    var s = SECTIONS.filter(function (x) { return x.id === parts[0]; })[0];
+    if (!parts.length || !s) return home;
+    var k = parts[1] && s.kids.filter(function (x) { return x[0] === parts[1]; })[0];
+    if (!k) return function () { return section(s); };
+    return function () { return s.id === 'principles' && P[k[0]] ? principlePage(s, k) : s.id === 'foundations' && F[k[0]] ? foundationPage(s, k) : s.id === 'components' && C[k[0]] ? componentPage(s, k) : stub(s, k); };
+  }
+
+  function render() {
+    var parts = location.hash.replace(/^#\/?/, '').split('/');
+    var view = route();
+    Array.prototype.forEach.call(nav.children, function (a) { a.classList.toggle('is-active', a.dataset.id === parts[0]); });
+    LECP.go(host, function (h) {
+      h.innerHTML = view();
+      window.scrollTo(0, 0);
+      var t = h.querySelector('h1');
+      if (t) t.focus({ preventScroll: true });
+    });
+  }
+
+  host.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href="#"]');
+    if (a) e.preventDefault();
+  });
+  window.addEventListener('hashchange', render);
+  render();
+})();
+</script>
+</body>
+</html>
